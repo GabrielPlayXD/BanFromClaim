@@ -29,7 +29,7 @@ public class BfclistCommand implements BasicCommand {
 	@Override
 	public void execute(CommandSourceStack commandSourceStack, String[] args) {
 		if (!(commandSourceStack.getSender() instanceof Player player)) {
-			MessageHandler.sendConsole("&cThis command can only be used in-game.");
+			MessageHandler.sendConsole(Messages.ONLY_INGAME);
 			return;
 		}
 
@@ -82,11 +82,11 @@ public class BfclistCommand implements BasicCommand {
 						final String bp = (String) listPlayers(regionID).toArray()[i];
 						final OfflinePlayer bannedPlayer = Bukkit.getOfflinePlayer(UUID.fromString(bp));
 						final String bannedPlayerName = bannedPlayer.getName() == null ? bp : bannedPlayer.getName();
-						MessageHandler.sendMessage(player, "&6" + bannedPlayerName);
+						MessageHandler.sendMessage(player, Messages.placeholders(Messages.LIST_PLAYER, bannedPlayerName, null, null));
 
 						if (i == this.countTo) {
 							MessageHandler.sendMessage(player, "");
-							MessageHandler.sendMessage(player, "&e<--- [&6" + this.number + "\\" + totalPage + "&e] --->");
+							MessageHandler.sendMessage(player, Messages.LIST_FOOTER.replace("%current%", String.valueOf(this.number)).replace("%total%", String.valueOf(totalPage)));
 							break;
 						}
 					}
@@ -94,7 +94,7 @@ public class BfclistCommand implements BasicCommand {
 
 				if (this.number == totalPage) {
 					MessageHandler.sendMessage(player, "");
-					MessageHandler.sendMessage(player, "&e<--- [&6" + totalPage + "\\" + totalPage + "&e] --->");
+					MessageHandler.sendMessage(player, Messages.LIST_FOOTER.replace("%current%", String.valueOf(totalPage)).replace("%total%", String.valueOf(totalPage)));
 				}
 			}
 		}

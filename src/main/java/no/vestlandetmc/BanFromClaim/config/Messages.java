@@ -31,7 +31,15 @@ public class Messages extends ConfigHandler {
 			SUBTITLE_MESSAGE,
 			BAN_ALL,
 			UNBAN_ALL,
-			LIST_BAN_ALL;
+			LIST_BAN_ALL,
+			ONLY_INGAME,
+			SAFESPOT_SET,
+			LIST_PLAYER,
+			LIST_FOOTER,
+			UPDATE_AVAILABLE,
+			UPDATE_VERSION,
+			UPDATE_LINK,
+			RELOAD;
 
 	private void onLoad() {
 
@@ -60,6 +68,14 @@ public class Messages extends ConfigHandler {
 		BAN_ALL = getString("ban-all");
 		UNBAN_ALL = getString("unban-all");
 		LIST_BAN_ALL = getString("list-ban-all");
+		ONLY_INGAME = getString("only-ingame");
+		SAFESPOT_SET = getString("safespot-set");
+		LIST_PLAYER = getString("list-player");
+		LIST_FOOTER = getString("list-footer");
+		UPDATE_AVAILABLE = getString("update-available");
+		UPDATE_VERSION = getString("update-version");
+		UPDATE_LINK = getString("update-link");
+		RELOAD = getString("reload");
 
 	}
 

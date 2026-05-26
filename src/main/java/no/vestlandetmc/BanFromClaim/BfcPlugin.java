@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import no.vestlandetmc.BanFromClaim.apiversions.VersionManager;
 import no.vestlandetmc.BanFromClaim.commands.*;
+import no.vestlandetmc.BanFromClaim.commands.ReloadCommand;
 import no.vestlandetmc.BanFromClaim.config.ClaimData;
 import no.vestlandetmc.BanFromClaim.config.Config;
 import no.vestlandetmc.BanFromClaim.config.Messages;
@@ -93,6 +94,12 @@ public class BfcPlugin extends JavaPlugin {
 						List.of("kfc", "kickfc"),
 						new KfcCommand());
 			}
+
+			commands.registrar().register(
+					"bfcreload",
+					"Reload the plugin configuration.",
+					List.of("bfcr"),
+					new ReloadCommand());
 		});
 
 		this.getServer().getPluginManager().registerEvents(new RegionListener(), this);

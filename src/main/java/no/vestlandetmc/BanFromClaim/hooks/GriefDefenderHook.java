@@ -118,7 +118,15 @@ public class GriefDefenderHook implements RegionHook {
 
 	@Override
 	public boolean hasTrust(OfflinePlayer player, String regionID) {
-		return false;
+		final Core gd = GriefDefender.getCore();
+		final Claim claim = gd.getClaim(UUID.fromString(regionID));
+		if (claim == null) return false;
+
+		return claim.getUserTrusts().contains(player.getUniqueId()) ||
+				claim.getUserTrusts(TrustTypes.ACCESSOR).contains(player.getUniqueId()) ||
+				claim.getUserTrusts(TrustTypes.CONTAINER).contains(player.getUniqueId()) ||
+				claim.getUserTrusts(TrustTypes.BUILDER).contains(player.getUniqueId()) ||
+				claim.getUserTrusts(TrustTypes.MANAGER).contains(player.getUniqueId());
 	}
 
 	@Override
