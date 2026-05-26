@@ -18,10 +18,6 @@ public class HookManager {
 		} else if (isPluginAvailable("GriefDefender")) {
 			activeRegionHook = new GriefDefenderHook();
 			BfcPlugin.getPlugin().getLogger().info("GriefDefender detected and hooked.");
-		} else if (isPluginAvailable("Residence")) {
-			activeRegionHook = new ResidenceHook();
-			BfcPlugin.getPlugin().getServer().getPluginManager().registerEvents(new ResidenceHook(), BfcPlugin.getPlugin());
-			BfcPlugin.getPlugin().getLogger().info("Residence detected and hooked.");
 		} else {
 			BfcPlugin.getPlugin().getLogger().warning("No supported protection plugins found!");
 			Bukkit.getPluginManager().disablePlugin(BfcPlugin.getPlugin());

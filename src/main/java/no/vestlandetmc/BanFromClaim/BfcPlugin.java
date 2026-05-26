@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import no.vestlandetmc.BanFromClaim.apiversions.VersionManager;
 import no.vestlandetmc.BanFromClaim.commands.*;
+import no.vestlandetmc.BanFromClaim.commands.ReloadCommand;
 import no.vestlandetmc.BanFromClaim.config.ClaimData;
 import no.vestlandetmc.BanFromClaim.config.Config;
 import no.vestlandetmc.BanFromClaim.config.Messages;

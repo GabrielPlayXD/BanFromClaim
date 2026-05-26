@@ -122,7 +122,7 @@ public class GriefDefenderHook implements RegionHook {
 		final Claim claim = gd.getClaim(UUID.fromString(regionID));
 		if (claim == null) return false;
 
-		return claim.getUserTrusts().contains(player.getUniqueId()) ||
+		return claim.getUserTrusts().containsKey(player.getUniqueId()) ||
 				claim.getUserTrusts(TrustTypes.ACCESS).contains(player.getUniqueId()) ||
 				claim.getUserTrusts(TrustTypes.CONTAINER).contains(player.getUniqueId()) ||
 				claim.getUserTrusts(TrustTypes.BUILDER).contains(player.getUniqueId()) ||
