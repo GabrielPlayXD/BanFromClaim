@@ -3,6 +3,7 @@ package no.vestlandetmc.BanFromClaim.commands;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import no.vestlandetmc.BanFromClaim.config.Config;
+import no.vestlandetmc.BanFromClaim.config.Messages;
 import no.vestlandetmc.BanFromClaim.handler.MessageHandler;
 import no.vestlandetmc.BanFromClaim.handler.Permissions;
 import org.bukkit.command.CommandSender;

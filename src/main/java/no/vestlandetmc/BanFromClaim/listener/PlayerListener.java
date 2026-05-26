@@ -1,6 +1,7 @@
 package no.vestlandetmc.BanFromClaim.listener;
 
 import no.vestlandetmc.BanFromClaim.BfcPlugin;
+import no.vestlandetmc.BanFromClaim.config.Messages;
 import no.vestlandetmc.BanFromClaim.handler.MessageHandler;
 import no.vestlandetmc.BanFromClaim.utils.UpdateNotification;
 import org.bukkit.Bukkit;
