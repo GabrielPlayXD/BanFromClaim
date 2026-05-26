@@ -22,7 +22,7 @@ public class BfcAllCommand implements BasicCommand {
 	@Override
 	public void execute(CommandSourceStack commandSourceStack, String[] strings) {
 		if (!(commandSourceStack.getSender() instanceof Player player)) {
-			MessageHandler.sendConsole("&cThis command can only be used in-game.");
+			MessageHandler.sendConsole(Messages.ONLY_INGAME);
 			return;
 		}
 

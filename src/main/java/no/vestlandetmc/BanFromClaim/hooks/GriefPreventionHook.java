@@ -102,12 +102,11 @@ public class GriefPreventionHook implements RegionHook, Listener {
 	@Override
 	public boolean hasTrust(OfflinePlayer player, String regionID) {
 		final Claim claim = GriefPrevention.instance.dataStore.getClaim(Long.parseLong(regionID));
+		if (claim == null) return false;
 
 		for (ClaimPermission claimPermission : ClaimPermission.values()) {
-			if (claimPermission != ClaimPermission.Edit) {
-				if (claim.checkPermission(player.getUniqueId(), claimPermission, null) == null) {
-					return true;
-				}
+			if (claim.checkPermission(player.getUniqueId(), claimPermission, null) == null) {
+				return true;
 			}
 		}
 

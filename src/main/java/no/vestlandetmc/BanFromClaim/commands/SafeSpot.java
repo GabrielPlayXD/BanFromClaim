@@ -18,12 +18,12 @@ public class SafeSpot implements BasicCommand {
 	@Override
 	public void execute(CommandSourceStack commandSourceStack, String[] args) {
 		if (!(commandSourceStack.getSender() instanceof Player player)) {
-			MessageHandler.sendConsole("&cYou cannot use this command from the console.");
+			MessageHandler.sendConsole(Messages.ONLY_INGAME);
 			return;
 		}
 
 		Config.setSafespot(player.getLocation());
-		MessageHandler.sendMessage(player, "&eCurrent location has been stored as a safespot.");
+		MessageHandler.sendMessage(player, Messages.SAFESPOT_SET);
 	}
 
 	@Override

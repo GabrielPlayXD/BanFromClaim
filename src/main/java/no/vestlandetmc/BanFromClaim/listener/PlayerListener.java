@@ -20,9 +20,9 @@ public class PlayerListener implements Listener {
 
 		if (player.isOp()) {
 			if (UpdateNotification.isUpdateAvailable()) {
-				MessageHandler.sendMessage(player, "&2" + BfcPlugin.getPlugin().getPluginMeta().getName() + " &ais outdated. Update is available!");
-				MessageHandler.sendMessage(player, "&aYour version is &2" + UpdateNotification.getCurrentVersion() + " &aand can be updated to version &2" + UpdateNotification.getLatestVersion());
-				MessageHandler.sendMessage(player, "&aGet the new update at &2https://modrinth.com/plugin/" + UpdateNotification.getProjectSlug());
+				MessageHandler.sendMessage(player, Messages.UPDATE_AVAILABLE.replace("%plugin%", BfcPlugin.getPlugin().getPluginMeta().getName()));
+				MessageHandler.sendMessage(player, Messages.UPDATE_VERSION.replace("%current%", UpdateNotification.getCurrentVersion()).replace("%latest%", UpdateNotification.getLatestVersion()));
+				MessageHandler.sendMessage(player, Messages.UPDATE_LINK.replace("%slug%", UpdateNotification.getProjectSlug()));
 			}
 		}
 

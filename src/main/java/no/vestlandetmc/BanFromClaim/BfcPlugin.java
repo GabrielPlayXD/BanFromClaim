@@ -93,6 +93,12 @@ public class BfcPlugin extends JavaPlugin {
 						List.of("kfc", "kickfc"),
 						new KfcCommand());
 			}
+
+			commands.registrar().register(
+					"bfcreload",
+					"Reload the plugin configuration.",
+					List.of("bfcr"),
+					new ReloadCommand());
 		});
 
 		this.getServer().getPluginManager().registerEvents(new RegionListener(), this);
