@@ -41,6 +41,7 @@ public class BanManager {
 			hasAttacked = CombatMode.getAttacker(player.getUniqueId()).equals(ownerUUID);
 
 		if (canBypass(player)) return;
+		if (regionHook.isOwner(player, regionID)) return;
 		if (regionHook.hasTrust(player, regionID)) return;
 
 		if ((claimData.isAllBanned(regionID) || isPlayerBanned(player, regionID)) && !hasAttacked) {
@@ -107,6 +108,7 @@ public class BanManager {
 
 		if (regionID == null) return;
 		if (canBypass(player)) return;
+		if (regionHook.isOwner(player, regionID)) return;
 
 		if ((claimData.isAllBanned(regionID) || isPlayerBanned(player, regionID)) && !regionHook.hasTrust(player, regionID)) {
 			final int sizeRadius = regionHook.sizeRadius(regionID);
