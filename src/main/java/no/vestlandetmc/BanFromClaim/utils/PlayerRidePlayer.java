@@ -1,13 +1,17 @@
 package no.vestlandetmc.BanFromClaim.utils;
 
-import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+
+import java.util.List;
 
 public class PlayerRidePlayer {
 
 	public static Player getPassenger(Player player) {
-		for (Player target : Bukkit.getOnlinePlayers()) {
-			if (target.getUniqueId().equals(player.getUniqueId())) {
+		final List<Entity> nearby = player.getNearbyEntities(1.0, 4.0, 1.0);
+
+		for (final Entity entity : nearby) {
+			if (!(entity instanceof Player target)) {
 				continue;
 			}
 

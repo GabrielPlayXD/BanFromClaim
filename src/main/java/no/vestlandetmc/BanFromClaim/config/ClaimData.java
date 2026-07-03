@@ -1,20 +1,53 @@
 package no.vestlandetmc.BanFromClaim.config;
 
 import no.vestlandetmc.BanFromClaim.BfcPlugin;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ClaimData {
 
-	private final FileConfiguration cfg = BfcPlugin.getDataFile();
-	private final String prefix = "bfc_claim_data";
+	private static final FileConfiguration cfg = BfcPlugin.getDataFile();
+	private static final String prefix = "bfc_claim_data";
+	private static final String banAllPrefix = "claims-ban-all";
+
+	private static final Map<String, Set<String>> bannedPlayersCache = new HashMap<>();
+	private static final Set<String> banAllCache = new HashSet<>();
 
 	public ClaimData() {
 
+	}
+
+	public static void loadCache() {
+		bannedPlayersCache.clear();
+		banAllCache.clear();
+
+		final ConfigurationSection bannedSection = cfg.getConfigurationSection(prefix);
+		if (bannedSection != null) {
+			for (final String claimID : bannedSection.getKeys(false)) {
+				final List<String> players = cfg.getStringList(prefix + "." + claimID);
+				if (!players.isEmpty()) {
+					bannedPlayersCache.put(claimID, new HashSet<>(players));
+				}
+			}
+		}
+
+		final ConfigurationSection banAllSection = cfg.getConfigurationSection(banAllPrefix);
+		if (banAllSection != null) {
+			for (final String claimID : banAllSection.getKeys(false)) {
+				if (cfg.getBoolean(banAllPrefix + "." + claimID + ".ban-all")) {
+					banAllCache.add(claimID);
+				}
+			}
+		}
 	}
 
 	public boolean setClaimData(String claimID, String bannedUUID, boolean add) {
@@ -36,78 +69,59 @@ public class ClaimData {
 	}
 
 	public void changeRegionID(String oldID, String newID) {
-		if (cfg.contains(prefix + "." + oldID)) {
-			if (cfg.getStringList(prefix + "." + oldID).isEmpty()) {
-				cfg.set(prefix + "." + oldID, null);
-			} else {
-				final List<String> uuid = bannedPlayers(oldID);
-				boolean banAll = false;
+		if (bannedPlayersCache.containsKey(oldID) || banAllCache.contains(oldID)) {
+			final Set<String> players = bannedPlayersCache.remove(oldID);
+			final boolean banAll = banAllCache.remove(oldID);
 
-				if (cfg.contains("claims-ban-all" + "." + oldID + ".ban-all")) {
-					banAll = cfg.getBoolean("claims-ban-all" + "." + oldID + ".ban-all");
-				}
-
-				cfg.createSection(prefix + "." + newID);
-				cfg.set("claims-ban-all" + "." + newID + ".ban-all", banAll);
-
-				if (uuid != null && !uuid.isEmpty()) {
-					cfg.set(prefix + "." + newID, uuid);
-				}
-
-				cfg.set("claims-ban-all" + "." + oldID, null);
-				cfg.set(prefix + "." + oldID, null);
-				saveDatafile();
+			if (players != null) {
+				bannedPlayersCache.put(newID, players);
+				cfg.set(prefix + "." + newID, new ArrayList<>(players));
 			}
+
+			if (banAll) {
+				banAllCache.add(newID);
+				cfg.set(banAllPrefix + "." + newID + ".ban-all", true);
+			}
+
+			cfg.set(prefix + "." + oldID, null);
+			cfg.set(banAllPrefix + "." + oldID, null);
+			saveDatafile();
 		}
 	}
 
 	private void addData(String claimID, String bannedUUID) {
-		final List<String> uuid = new ArrayList<>();
+		final Set<String> players = bannedPlayersCache.computeIfAbsent(claimID, k -> new HashSet<>());
+		players.add(bannedUUID);
 
-		if (!cfg.contains(prefix + "." + claimID)) {
-			cfg.createSection(prefix + "." + claimID);
-		}
-
-		if (!cfg.getStringList(prefix + "." + claimID).isEmpty()) {
-			uuid.addAll(cfg.getStringList(prefix + "." + claimID));
-		}
-
-		uuid.add(bannedUUID);
-		cfg.set(prefix + "." + claimID, uuid);
+		cfg.set(prefix + "." + claimID, new ArrayList<>(players));
 		saveDatafile();
 	}
 
 	public void banAll(String claimID) {
-		if (cfg.contains("claims-ban-all" + "." + claimID + ".ban-all")) {
-			if (cfg.getBoolean("claims-ban-all" + "." + claimID + ".ban-all")) {
-				cfg.set("claims-ban-all" + "." + claimID + ".ban-all", false);
-			} else {
-				cfg.set("claims-ban-all" + "." + claimID + ".ban-all", true);
-			}
+		if (banAllCache.contains(claimID)) {
+			banAllCache.remove(claimID);
+			cfg.set(banAllPrefix + "." + claimID + ".ban-all", false);
 		} else {
-			cfg.set("claims-ban-all" + "." + claimID + ".ban-all", true);
+			banAllCache.add(claimID);
+			cfg.set(banAllPrefix + "." + claimID + ".ban-all", true);
 		}
 
 		saveDatafile();
 	}
 
 	public boolean isAllBanned(String claimID) {
-		if (cfg.contains("claims-ban-all" + "." + claimID + ".ban-all")) {
-			return cfg.getBoolean("claims-ban-all" + "." + claimID + ".ban-all");
-		} else {
-			return false;
-		}
+		return banAllCache.contains(claimID);
 	}
 
 	private void removeData(String claimID, String bannedUUID) {
-		if (!cfg.getStringList(prefix + "." + claimID).isEmpty()) {
-			final List<String> uuid = new ArrayList<>(cfg.getStringList(prefix + "." + claimID));
-			if (uuid.contains(bannedUUID)) {
-				uuid.remove(bannedUUID);
-				cfg.set(prefix + "." + claimID, uuid);
-
-				if (cfg.getStringList(prefix + "." + claimID).isEmpty()) {
+		final Set<String> players = bannedPlayersCache.get(claimID);
+		if (players != null) {
+			if (players.remove(bannedUUID)) {
+				if (players.isEmpty()) {
+					bannedPlayersCache.remove(claimID);
 					cfg.set(prefix + "." + claimID, null);
+				} else {
+					cfg.set(prefix + "." + claimID, new ArrayList<>(players));
 				}
 				saveDatafile();
 			}
@@ -115,36 +129,22 @@ public class ClaimData {
 	}
 
 	private boolean existData(String claimID, String bannedUUID) {
-		if (cfg.contains(prefix + "." + claimID)) {
-			if (cfg.getStringList(prefix + "." + claimID).isEmpty()) {
-				return false;
-
-			} else {
-				final List<String> uuid = new ArrayList<>(cfg.getStringList(prefix + "." + claimID));
-				return uuid.contains(bannedUUID);
-			}
-		}
-
-		return false;
+		final Set<String> players = bannedPlayersCache.get(claimID);
+		return players != null && players.contains(bannedUUID);
 	}
 
 	public boolean checkClaim(String claimID) {
-		return cfg.contains(prefix + "." + claimID);
+		return bannedPlayersCache.containsKey(claimID);
 	}
 
 	public List<String> bannedPlayers(String claimID) {
-		if (cfg.contains(prefix + "." + claimID)) {
-			if (!cfg.getStringList(prefix + "." + claimID).isEmpty()) {
-				return cfg.getStringList(prefix + "." + claimID);
-			}
-		}
-
-		return null;
+		final Set<String> players = bannedPlayersCache.get(claimID);
+		return players != null ? new ArrayList<>(players) : null;
 	}
 
 	public static void saveDatafile() {
 		try {
-			File file = new File(BfcPlugin.getPlugin().getDataFolder(), "data.dat");
+			final File file = new File(BfcPlugin.getPlugin().getDataFolder(), "data.dat");
 			BfcPlugin.getDataFile().save(file);
 		} catch (final IOException e) {
 			BfcPlugin.getPlugin().getLogger().severe(e.getMessage());
@@ -152,12 +152,13 @@ public class ClaimData {
 	}
 
 	public static void createSection() {
-		if (!BfcPlugin.getDataFile().contains("bfc_claim_data")) {
-			BfcPlugin.getDataFile().createSection("bfc_claim_data");
+		if (!cfg.contains(prefix)) {
+			cfg.createSection(prefix);
 		}
-		if (!BfcPlugin.getDataFile().contains("claims-ban-all")) {
-			BfcPlugin.getDataFile().createSection("claims-ban-all");
+		if (!cfg.contains(banAllPrefix)) {
+			cfg.createSection(banAllPrefix);
 		}
 		saveDatafile();
+		loadCache();
 	}
 }
