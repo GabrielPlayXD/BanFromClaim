@@ -19,16 +19,16 @@ public class ParticleHandler {
 		final DustOptions dust = new DustOptions(Color.fromRGB(100, 0, 0), 0.5F);
 
 		if (isX) {
-			for (float r = 0; r <= radius; r += 0.2F) {
-				for (double t = 0; t < 50; t += 0.2) {
+			for (float r = 0.2F; r <= radius; r += 0.2F) {
+				for (double t = 0; t < Math.PI * 2; t += 0.4) {
 					final float x = r * (float) Math.sin(t);
 					final float y = r * (float) Math.cos(t);
 					loc.getWorld().spawnParticle(dustParticle, loc.getX() + x, loc.getY() + 1D + y, loc.getZ(), 1, dust);
 				}
 			}
 		} else {
-			for (float r = 0; r <= radius; r += 0.2F) {
-				for (double t = 0; t < 50; t += 0.2) {
+			for (float r = 0.2F; r <= radius; r += 0.2F) {
+				for (double t = 0; t < Math.PI * 2; t += 0.4) {
 					final float z = r * (float) Math.sin(t);
 					final float y = r * (float) Math.cos(t);
 					loc.getWorld().spawnParticle(dustParticle, loc.getX(), loc.getY() + 1D + y, loc.getZ() + z, 1, dust);

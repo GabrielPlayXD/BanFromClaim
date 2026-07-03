@@ -18,95 +18,88 @@ import java.util.UUID;
 
 public class BanManager {
 
+	private final ClaimData claimData = new ClaimData();
+
 	public void enforceBan(Player player, Location locTo, Location locFrom) {
-		final ClaimData claimData = new ClaimData();
+		if (canBypass(player)) return;
+
 		final RegionHook regionHook = BfcPlugin.getHookManager().getActiveRegionHook();
 		final String regionID = regionHook.getRegionID(locTo);
-		final ParticleHandler ph = new ParticleHandler(locTo);
 
 		if (regionID == null) return;
+
+		final boolean isAllBanned = claimData.isAllBanned(regionID);
+		final boolean isPlayerBanned = isPlayerBanned(player, regionID);
+
+		if (!isAllBanned && !isPlayerBanned) {
+			final Player target = PlayerRidePlayer.getPassenger(player);
+			if (target != null && (isPlayerBanned(target, regionID) || claimData.isAllBanned(regionID))
+					&& !regionHook.hasTrust(target, regionID) && !canBypass(target)) {
+				target.teleport(player.getLocation().add(0, 4, 0));
+			}
+			return;
+		}
+
+		if (regionHook.hasTrust(player, regionID)) return;
 
 		final UUID ownerUUID = regionHook.getOwnerID(regionID);
 		if (ownerUUID == null) return;
 
-		final Player target = PlayerRidePlayer.getPassenger(player);
 		boolean hasAttacked = false;
-
-		if (target != null && !regionHook.hasTrust(target, regionID) && !canBypass(target)
-				&& (claimData.isAllBanned(regionID) || isPlayerBanned(target, regionID) || isPlayerBanned(player, regionID))) {
-			target.teleport(player.getLocation().add(0, 4, 0));
-		}
-
 		if (CombatMode.attackerContains(player.getUniqueId()))
 			hasAttacked = CombatMode.getAttacker(player.getUniqueId()).equals(ownerUUID);
 
-		if (canBypass(player)) return;
-		if (regionHook.hasTrust(player, regionID)) return;
+		if (hasAttacked) return;
 
-		if ((claimData.isAllBanned(regionID) || isPlayerBanned(player, regionID)) && !hasAttacked) {
-			final String regionIdFrom = regionHook.getRegionID(locFrom);
+		final String regionIdFrom = regionHook.getRegionID(locFrom);
+		final ParticleHandler ph = new ParticleHandler(locTo);
 
-			if (regionIdFrom != null && regionIdFrom.equals(regionID)) {
-				if (isPlayerBanned(player, regionID) || claimData.isAllBanned(regionID)) {
-					final int sizeRadius = regionHook.sizeRadius(regionID);
-					final Location greaterBoundaryCorner = regionHook.getGreaterBoundaryCorner(regionID);
-					final Location lesserBoundaryCorner = regionHook.getLesserBoundaryCorner(regionID);
+		if (regionIdFrom != null && regionIdFrom.equals(regionID)) {
+			final int sizeRadius = regionHook.sizeRadius(regionID);
+			final Location greaterBoundaryCorner = regionHook.getGreaterBoundaryCorner(regionID);
+			final Location lesserBoundaryCorner = regionHook.getLesserBoundaryCorner(regionID);
 
-					final LocationFinder lf = new LocationFinder(greaterBoundaryCorner, lesserBoundaryCorner, player.getWorld().getUID(), sizeRadius);
-					Bukkit.getScheduler().runTaskAsynchronously(BfcPlugin.getPlugin(), () -> lf.IterateCircumferences(randomCircumferenceRadiusLoc -> {
-						if (randomCircumferenceRadiusLoc == null) {
-							if (Config.SAFE_LOCATION == null) {
-								player.teleport(player.getWorld().getSpawnLocation());
-							} else {
-								player.teleport(Config.SAFE_LOCATION);
-							}
-						} else {
-							player.teleport(randomCircumferenceRadiusLoc);
-						}
-
-					}));
-
-				} else {
-					final Location tpLoc = player.getLocation().add(locFrom.toVector().subtract(locTo.toVector()).normalize().multiply(3));
-
-					if (tpLoc.getBlock().getType().equals(Material.AIR)) {
-						player.teleport(tpLoc);
+			final LocationFinder lf = new LocationFinder(greaterBoundaryCorner, lesserBoundaryCorner, player.getWorld().getUID(), sizeRadius);
+			Bukkit.getScheduler().runTaskAsynchronously(BfcPlugin.getPlugin(), () -> lf.IterateCircumferences(randomCircumferenceRadiusLoc -> {
+				if (randomCircumferenceRadiusLoc == null) {
+					if (Config.SAFE_LOCATION == null) {
+						player.teleport(player.getWorld().getSpawnLocation());
 					} else {
-						final Location safeLoc = tpLoc.getWorld().getHighestBlockAt(tpLoc).getLocation().add(0D, 1D, 0D);
-						player.teleport(safeLoc);
+						player.teleport(Config.SAFE_LOCATION);
 					}
-
-					ph.drawCircle(1, locTo.getBlockX() == locFrom.getBlockX());
-				}
-
-			} else {
-				final Location tpLoc = player.getLocation().add(locFrom.toVector().subtract(locTo.toVector()).normalize().multiply(3));
-				if (tpLoc.getBlock().getType().equals(Material.AIR)) {
-					player.teleport(tpLoc);
 				} else {
-					final Location safeLoc = tpLoc.getWorld().getHighestBlockAt(tpLoc).getLocation().add(0D, 1D, 0D);
-					player.teleport(safeLoc);
+					player.teleport(randomCircumferenceRadiusLoc);
 				}
 
-				ph.drawCircle(1, locTo.getBlockX() == locFrom.getBlockX());
+			}));
+
+		} else {
+			final Location tpLoc = player.getLocation().add(locFrom.toVector().subtract(locTo.toVector()).normalize().multiply(3));
+			if (tpLoc.getBlock().getType().equals(Material.AIR)) {
+				player.teleport(tpLoc);
+			} else {
+				final Location safeLoc = tpLoc.getWorld().getHighestBlockAt(tpLoc).getLocation().add(0D, 1D, 0D);
+				player.teleport(safeLoc);
 			}
 
-			if (!MessageHandler.spamMessageClaim.contains(player.getUniqueId().toString())) {
-				MessageHandler.sendTitle(player, Messages.TITLE_MESSAGE, Messages.SUBTITLE_MESSAGE);
-				MessageHandler.spamMessageClaim.add(player.getUniqueId().toString());
+			ph.drawCircle(1, locTo.getBlockX() == locFrom.getBlockX());
+		}
 
-				Bukkit.getScheduler().runTaskLater(BfcPlugin.getPlugin(), () -> MessageHandler.spamMessageClaim.remove(player.getUniqueId().toString()), 5L * 20L);
-			}
+		if (!MessageHandler.spamMessageClaim.contains(player.getUniqueId().toString())) {
+			MessageHandler.sendTitle(player, Messages.TITLE_MESSAGE, Messages.SUBTITLE_MESSAGE);
+			MessageHandler.spamMessageClaim.add(player.getUniqueId().toString());
+
+			Bukkit.getScheduler().runTaskLater(BfcPlugin.getPlugin(), () -> MessageHandler.spamMessageClaim.remove(player.getUniqueId().toString()), 5L * 20L);
 		}
 	}
 
 	public void kickPlayer(Player player, Location locTo) {
-		final ClaimData claimData = new ClaimData();
+		if (canBypass(player)) return;
+
 		final RegionHook regionHook = BfcPlugin.getHookManager().getActiveRegionHook();
 		final String regionID = regionHook.getRegionID(locTo);
 
 		if (regionID == null) return;
-		if (canBypass(player)) return;
 
 		if ((claimData.isAllBanned(regionID) || isPlayerBanned(player, regionID)) && !regionHook.hasTrust(player, regionID)) {
 			final int sizeRadius = regionHook.sizeRadius(regionID);
@@ -134,17 +127,6 @@ public class BanManager {
 	}
 
 	private boolean isPlayerBanned(Player player, String claimID) {
-		final ClaimData claimData = new ClaimData();
-		if (claimData.checkClaim(claimID)) {
-			if (claimData.bannedPlayers(claimID) != null) {
-				for (final String bp : claimData.bannedPlayers(claimID)) {
-					if (bp.equals(player.getUniqueId().toString())) {
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
+		return claimData.bannedPlayers(claimID) != null && claimData.bannedPlayers(claimID).contains(player.getUniqueId().toString());
 	}
 }

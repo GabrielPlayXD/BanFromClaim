@@ -27,8 +27,11 @@ public class LocationFinder {
 	 */
 	public void IterateCircumferences(CallbackReturnLocation callback) {
 		final World circumferenceWorld = Bukkit.getWorld(this.circumferenceWorldUUID);
+		if (circumferenceWorld == null) return;
+
 		final BfcPlugin plugin = BfcPlugin.getPlugin();
-		Location randomCircumferenceRadiusLoc = null;
+		final Location checkLoc = new Location(circumferenceWorld, 0, 120, 0);
+		Location resultLoc = null;
 
 		final int maxCircleIterations = 10;
 		final int checkLocationsPerCircumference = 4;
@@ -40,38 +43,34 @@ public class LocationFinder {
 			circumferenceRadius *= 2;
 
 			for (int j = 0; j < checkLocationsPerCircumference; j++) { //Circumference position + check within claim
-				randomCircumferenceRadiusLoc = GetRandomCircumferenceLoc(this.circumferenceCenter, circumferenceRadius, circumferenceWorld);
-				if (!hasClaim(randomCircumferenceRadiusLoc)) {
+				updateRandomCircumferenceLoc(checkLoc, this.circumferenceCenter, circumferenceRadius);
+
+				if (!hasClaim(checkLoc)) {
 					safeLocationChecks++;
 
-					final Block highestBlock = circumferenceWorld.getHighestBlockAt(randomCircumferenceRadiusLoc);
+					final Block highestBlock = circumferenceWorld.getHighestBlockAt(checkLoc);
 
 					if (SafeLocationCheck.BlockSafetyCheck(highestBlock)) {
-						randomCircumferenceRadiusLoc = new Location(circumferenceWorld, highestBlock.getX() + 0.5, highestBlock.getY() + 1, highestBlock.getZ() + 0.5);
+						resultLoc = highestBlock.getLocation().add(0.5, 1, 0.5);
 						break outer;
 					} else if (safeLocationChecks < maxSafeLocationFailures)
 						j = 0; //Reset circumference position search unless it's the last safe check
 				}
 			}
-
-			if (i == maxCircleIterations - 1)
-				randomCircumferenceRadiusLoc = null; //Last iteration and no appropriate position found
 		}
 
-		final Location finalRandomCircumferenceRadiusLoc = randomCircumferenceRadiusLoc;
-		Bukkit.getScheduler().runTask(plugin, () -> callback.onDone(finalRandomCircumferenceRadiusLoc));
+		final Location finalResultLoc = resultLoc;
+		Bukkit.getScheduler().runTask(plugin, () -> callback.onDone(finalResultLoc));
 	}
 
 	/**
-	 * Returns a random Location from a circumference of circumferenceRadius and circunferenceCenter
+	 * Updates the provided Location with a random position from a circumference of circumferenceRadius and circumferenceCenter
 	 */
-	private Location GetRandomCircumferenceLoc(Location circumferenceCenter, int circumferenceRadius, World circumferenceWorld) {
+	private void updateRandomCircumferenceLoc(Location loc, Location circumferenceCenter, int circumferenceRadius) {
 		final double randomAngle = Math.random() * Math.PI * 2;
-		return new Location(circumferenceWorld,
-				circumferenceCenter.getX() + Math.cos(randomAngle) * circumferenceRadius,
-				120,
-				circumferenceCenter.getZ() + Math.sin(randomAngle) * circumferenceRadius
-		);
+		loc.setX(circumferenceCenter.getX() + Math.cos(randomAngle) * circumferenceRadius);
+		loc.setY(120);
+		loc.setZ(circumferenceCenter.getZ() + Math.sin(randomAngle) * circumferenceRadius);
 	}
 
 	private Location findCenter(Location loc1, Location loc2) {
